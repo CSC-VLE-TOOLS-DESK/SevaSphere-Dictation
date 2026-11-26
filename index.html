@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SevaSphere Dictation: speak and it types</title>
+<meta name="description" content="Free voice-to-text dictation in your browser. Hindi, English and 15+ languages, voice commands, filler-word cleanup, snippets and saved notes.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0e5a52">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6f4;--surface:#fff;--ink:#10201e;--muted:#4c615e;--line:#d3dfdb;--brand:#0e5a52;--brand-ink:#fff;--sun:#f2a93b;--sun-ink:#2b1c00;--soft:#e2eeea;--rec:#d6362b;
+--display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--body:"Hind","Segoe UI",system-ui,sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1715;--surface:#13231f;--ink:#e7f1ee;--muted:#9bb2ad;--line:#25403a;--brand:#4fc3b0;--brand-ink:#04231e;--soft:#183029;--rec:#ff6a5e}}
+:root[data-theme="dark"]{--bg:#0c1715;--surface:#13231f;--ink:#e7f1ee;--muted:#9bb2ad;--line:#25403a;--brand:#4fc3b0;--brand-ink:#04231e;--soft:#183029;--rec:#ff6a5e}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px;border-radius:6px}
+.wrap{max-width:62rem;margin:0 auto;padding:0 1.25rem}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:1rem;height:4rem}
+.logo{font:800 1.3rem var(--display);text-decoration:none;color:inherit;display:flex;gap:.5rem;align-items:center;letter-spacing:-.02em}
+.logo i{width:1.4rem;height:1.4rem;border-radius:50%;background:conic-gradient(var(--sun),var(--brand),var(--sun))}
+nav{margin-left:auto;display:flex;gap:1rem;align-items:center}
+nav a{color:var(--muted);text-decoration:none;font-weight:500}nav a:hover{color:var(--ink)}
+.icon,.btn{font:600 1rem var(--body);cursor:pointer;border-radius:999px}
+.icon{border:1px solid var(--line);background:var(--surface);color:var(--ink);width:2.4rem;height:2.4rem;border-radius:50%}
+.btn{border:0;padding:.6rem 1.1rem;background:var(--soft);color:var(--ink)}
+.btn.main{background:var(--brand);color:var(--brand-ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+h1{font:800 clamp(2.1rem,6vw,3.6rem)/1.04 var(--display);letter-spacing:-.035em;margin:2.5rem 0 .6rem}
+.lead{color:var(--muted);font-size:1.15rem;max-width:40rem;margin:0 0 1.5rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:1.25rem;padding:1.25rem}
+.opts{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:center;margin-bottom:1rem}
+.opts label{display:flex;gap:.45rem;align-items:center;font-weight:500;font-size:.97rem}
+select,input[type=text],textarea{font:400 1rem var(--body);padding:.55rem .75rem;border:1px solid var(--line);border-radius:.6rem;background:var(--bg);color:var(--ink);max-width:100%}
+input[type=checkbox]{width:1.1rem;height:1.1rem;accent-color:var(--brand)}
+.stage{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+.mic{position:relative;flex:none;width:4.5rem;height:4.5rem;border-radius:50%;border:0;background:var(--brand);color:var(--brand-ink);font-size:1.7rem;cursor:pointer}
+.mic.on{background:var(--rec);color:#fff}
+.mic.on::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid var(--rec);animation:ring 1.3s ease-out infinite}
+@keyframes ring{from{transform:scale(.9);opacity:.9}to{transform:scale(1.3);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mic.on::after{animation:none;opacity:.5}}
+#status{font-weight:600}
+#interim{color:var(--muted);font-style:italic;min-height:1.6em}
+textarea#out{width:100%;min-height:15rem;resize:vertical;font-size:1.15rem;line-height:1.65;padding:1rem}
+.row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.9rem;align-items:center}
+.stats{margin-left:auto;color:var(--muted);font-size:.93rem}
+.msg{margin:.8rem 0 0;padding:.7rem 1rem;border-radius:.7rem;background:var(--soft);display:none}
+.msg.show{display:block}.msg.bad{border-left:4px solid var(--rec)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem;margin:1.5rem 0}
+h2{font:700 1.35rem var(--display);margin:0 0 .6rem;letter-spacing:-.01em}
+.panel p,.panel li{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.97rem}td{padding:.3rem 0;border-bottom:1px solid var(--line)}td:first-child{font-weight:600;color:var(--ink);padding-right:.8rem}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}
+.list li{display:flex;gap:.5rem;align-items:center;background:var(--bg);border-radius:.6rem;padding:.4rem .6rem}
+.list li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list button{border:0;background:none;color:var(--ink);cursor:pointer;font:600 .9rem var(--body);padding:.2rem .4rem}
+.snipform{display:grid;gap:.5rem;margin-bottom:.8rem}
+.fam{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.6rem}
+.fam a,.fam span{padding:.5rem 1rem;border-radius:999px;background:var(--soft);text-decoration:none;color:var(--ink);font-weight:600}
+.fam span{color:var(--muted);font-weight:500}
+footer{border-top:1px solid var(--line);margin-top:2rem;padding:1.5rem 0 3rem;color:var(--muted);font-size:.95rem}
+.toast{position:fixed;left:50%;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.55rem 1.1rem;border-radius:999px;font-weight:600;z-index:60}
+kbd{background:var(--soft);padding:.05rem .4rem;border-radius:.3rem;font-size:.9em}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <a class="logo" href="#top"><i></i>SevaSphere Dictation</a>
+  <nav aria-label="Main"><button class="btn main" id="install" hidden>Install app</button><span id="hlinks"></span><button class="icon" id="theme" aria-label="Switch light or dark theme" title="Switch theme">◐</button></nav>
+</div></header>
+
+<main class="wrap" id="top">
+  <h1>Don’t type. Just speak.</h1>
+  <p class="lead">Press the mic and talk in Hindi, English or 15+ other languages. Your words appear as clean, punctuated text, ready to copy anywhere.</p>
+
+  <section class="panel" aria-label="Dictation">
+    <div class="opts">
+      <label>Language <select id="lang"></select></label>
+      <label><input type="checkbox" id="clean" checked> Remove “um” and “uh”</label>
+      <label><input type="checkbox" id="cmds" checked> Voice commands (English + हिन्दी)</label>
+      <label><input type="checkbox" id="auto" checked> Auto punctuation</label>
+    </div>
+    <div class="stage">
+      <button class="mic" id="mic" aria-pressed="false" aria-label="Start dictation">🎙️</button>
+      <div><div id="status" role="status">Ready. Press the mic or <kbd>Alt</kbd>+<kbd>D</kbd></div><div id="interim" aria-live="off"></div><canvas id="wave" width="300" height="36" aria-hidden="true" style="color:var(--brand);max-width:100%;display:block"></canvas></div>
+    </div>
+    <textarea id="out" placeholder="Your dictated text appears here. You can also type or edit it." aria-label="Dictated text"></textarea>
+    <div class="row">
+      <button class="btn main" id="copy">Copy</button>
+      <button class="btn" id="save">Save note</button>
+      <button class="btn" id="dl">Download .txt</button>
+      <button class="btn" id="speak">Read aloud</button><button class="btn" id="mrec">⏺ Record voice</button>
+      <button class="btn" id="clear">Clear</button>
+      <span class="stats" id="stats"></span>
+    </div>
+    <div class="row" role="group" aria-label="Text tools"><button class="btn" data-tx="title">Title Case</button><button class="btn" data-tx="upper">UPPERCASE</button><button class="btn" data-tx="bullets">Make bullets</button><button class="btn" data-tx="spaces">Fix spaces</button><button class="btn main" id="wa">Send on WhatsApp</button><button class="btn" id="mail">Email</button><button class="icon" id="fm" aria-label="Smaller text">A−</button><button class="icon" id="fp" aria-label="Larger text">A+</button></div>
+    <div class="row" role="group" aria-label="Translate"><label style="display:flex;gap:.45rem;align-items:center;font-weight:500">Translate to <select id="tl"></select></label><button class="btn main" id="tr">Translate text</button></div>
+    <div id="perm" class="stats" style="margin:.7rem 0 0"></div>
+    <div class="msg" id="msg" role="alert"></div>
+  </section>
+
+  <div class="cols">
+    <section class="panel"><h2>Voice commands</h2>
+      <table><tr><td>“full stop”</td><td>.</td></tr><tr><td>“comma”</td><td>,</td></tr><tr><td>“question mark”</td><td>?</td></tr><tr><td>“exclamation mark”</td><td>!</td></tr><tr><td>“new line”</td><td>line break</td></tr><tr><td>“new paragraph”</td><td>blank line</td></tr><tr><td>“scratch that” / “वह हटाओ”</td><td>undo last phrase</td></tr><tr><td>“पूर्ण विराम”</td><td>।</td></tr><tr><td>“अल्पविराम”</td><td>,</td></tr><tr><td>“प्रश्न चिह्न”</td><td>?</td></tr><tr><td>“नई लाइन” / “नया पैराग्राफ”</td><td>line / paragraph</td></tr></table>
+    </section>
+    <section class="panel"><h2>Snippets</h2>
+      <p>Say a phrase and it expands. Example: “my email”.</p>
+      <div class="snipform"><input type="text" id="sk" placeholder="Say this…" aria-label="Phrase to say"><input type="text" id="sv" placeholder="Types this…" aria-label="Text to insert"><button class="btn main" id="sadd">Add snippet</button></div>
+      <ul class="list" id="snips"></ul>
+    </section>
+    <section class="panel"><h2>Saved notes</h2>
+      <p id="noteshint">Saved on this device only.</p>
+      <ul class="list" id="notes"></ul>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-bottom:1rem"><h2>Voice studio</h2>
+    <div class="opts"><label>Voice <select id="vsel"></select></label><label>Type <select id="vg"><option value="">All</option><option value="f">Female</option><option value="m">Male</option></select></label>
+    <label>Speed <input type="range" id="vr" min="0.6" max="1.6" step="0.1" value="1"></label><label>Pitch <input type="range" id="vp" min="0.6" max="1.6" step="0.1" value="1"></label><button class="btn" id="vtest">Test voice</button></div>
+    <p>Voices come from your device. Browsers don’t say whether a voice is male or female, so we guess from its name.</p>
+    <div class="opts"><label><input type="checkbox" id="rec"> Also record my voice while I dictate</label><button class="btn" id="ra">Record read-aloud (tab audio, experimental)</button></div>
+    <h2 style="margin-top:1rem">Recordings</h2><p>Stored on this device. Download as original, MP3 or WAV.</p><ul class="list" id="recs"></ul></section>
+  <section class="panel"><h2>More from SevaSphere</h2>
+    <p>Dictation is one of our free tools. Explore the rest of the family:</p>
+    <div class="fam" id="fam"></div>
+  </section>
+</main>
+
+<footer><div class="wrap">© <span id="yr"></span> SevaSphere. Speech recognition is provided by your browser. In Chrome and Edge your audio is processed by the browser vendor’s speech service, so avoid dictating secrets. Works best in Chrome, Edge and Safari; Firefox does not support it.</div></footer>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+"use strict";
+/* ===== EDIT: link your live sites here ===== */
+const FAMILY=[
+  {name:"SevaSphere",url:""},
+  {name:"Kids Corner",url:""}
+];
+const LANGS=[["en-IN","English (India)"],["hi-IN","हिन्दी (Hindi)"],["en-US","English (US)"],["en-GB","English (UK)"],["bn-IN","বাংলা (Bengali)"],["ta-IN","தமிழ் (Tamil)"],["te-IN","తెలుగు (Telugu)"],["mr-IN","मराठी (Marathi)"],["gu-IN","ગુજરાતી (Gujarati)"],["pa-IN","ਪੰਜਾਬੀ (Punjabi)"],["ur-PK","اردو (Urdu)"],["es-ES","Español"],["fr-FR","Français"],["de-DE","Deutsch"],["ar-SA","العربية"],["pt-BR","Português"],["ja-JP","日本語"]];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const out=$("#out");
+let snippets=store.get("dict-snips",[]),notes=store.get("dict-notes",[]),last=null,prevText=null;
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,1800)}
+function showMsg(m,bad){const e=$("#msg");e.textContent=m||"";e.className="msg"+(m?" show":"")+(bad?" bad":"")}
+
+/* ---------- text processing ---------- */
+function process(raw,lang){
+  let t=raw.trim();if(!t)return"";const en=lang.startsWith("en");
+  if($("#clean").checked&&en)t=t.replace(/\b(um+|uh+|erm|hmm+)\b[,.]?\s*/gi,"");
+  for(const s of snippets){const re=new RegExp("\\b"+s.k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","gi");t=t.replace(re,()=>s.v)}
+  if($("#cmds").checked&&en){
+    t=t.replace(/\b(full stop|period)\b/gi,".").replace(/\bcomma\b/gi,",").replace(/\bquestion mark\b/gi,"?").replace(/\bexclamation (mark|point)\b/gi,"!")
+       .replace(/\bcolon\b/gi,":").replace(/\bnew paragraph\b/gi,"\n\n").replace(/\bnew line\b/gi,"\n");
+    t=t.replace(/\s+([.,?!:;])/g,"$1").replace(/\s*\n\s*/g,m=>m.includes("\n\n")||(m.match(/\n/g)||[]).length>1?"\n\n":"\n");
+  }
+  if($("#cmds").checked&&lang.startsWith("hi")){t=t.replace(/\s*(पूर्ण विराम|फुल स्टॉप)\s*/g,"। ").replace(/\s*(अल्पविराम|कॉमा)\s*/g,", ").replace(/\s*(प्रश्न चिह्न|प्रश्नवाचक चिह्न)\s*/g,"? ").replace(/\s*(नया पैराग्राफ|न्यू पैराग्राफ)\s*/g,"\n\n").replace(/\s*(नई लाइन|नयी लाइन|न्यू लाइन)\s*/g,"\n").replace(/\s+([।,?])/g,"$1")}
+  if(en){t=t.replace(/\bi\b/g,"I").replace(/([.?!]\s+|\n)([a-z])/g,(_,a,b)=>a+b.toUpperCase())}
+  t=t.trim();if($("#auto").checked&&t&&!/[.?!।。۔,:;\n]$/.test(t)){t+=({hi:"।",bn:"।",ja:"。",ur:"۔"})[lang.slice(0,2)]||"."}return t;
+}
+function insert(chunk){
+  if(!chunk)return;
+  const v=out.value,s=out.selectionStart??v.length,e=out.selectionEnd??v.length,before=v.slice(0,s);
+  let c=chunk;
+  if(before.trim()===""||/[.?!]\s*$/.test(before)||/\n\s*$/.test(before))c=c.charAt(0).toUpperCase()+c.slice(1);
+  const sp=before&&!/\s$/.test(before)&&!/^[.,?!:;\n]/.test(c)?" ":"";
+  const add=sp+c;out.value=before+add+v.slice(e);
+  const pos=s+add.length;out.setSelectionRange(pos,pos);
+  last={start:s,len:add.length};sessionWords+=c.split(/\s+/).filter(Boolean).length;stats();draft();
+}
+function scratch(){if(!last)return;const v=out.value;out.value=v.slice(0,last.start)+v.slice(last.start+last.len);out.setSelectionRange(last.start,last.start);last=null;stats();draft();toast("Removed last phrase")}
+
+/* ---------- recognition ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let wd=null,gotResult=false,micStream=null,rec=null,want=false,t0=0,sessionWords=0,restarts=0;
+const mic=$("#mic");
+function setUI(on){if(!on&&micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}mic.classList.toggle("on",on);mic.setAttribute("aria-pressed",on);mic.setAttribute("aria-label",on?"Stop dictation":"Start dictation");$("#status").textContent=on?"Listening… speak now":"Ready. Press the mic or Alt+D";if(!on)$("#interim").textContent=""}
+async function start(){
+  if(!SR){showMsg("This browser can’t do speech recognition. Please open this page in Chrome, Edge or Safari.",true);return}
+  showMsg("");const lang=$("#lang").value;
+  if(!micStream&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){try{micStream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(x){showMsg("Microphone access was refused or is unavailable ("+x.name+"). Allow it from the lock icon in the address bar, then press the mic again.",true);return}}
+  rec=rec||new SR();rec.lang=lang;rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
+  rec.onresult=e=>{gotResult=true;let interim="";
+    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i],txt=r[0].transcript;
+      if(r.isFinal){restarts=0;const plain=txt.trim().toLowerCase();
+        if($("#cmds").checked&&(plain==="scratch that"||plain==="स्क्रैच दैट"||plain==="वह हटाओ"))scratch();else insert(process(txt,lang))}
+      else interim+=txt}
+    $("#interim").textContent=interim};
+  rec.onerror=e=>{const m={"not-allowed":"Microphone is blocked. Allow microphone access in the address bar, then try again.","service-not-allowed":"Speech service is blocked in this browser or page.","audio-capture":"No microphone found. Plug one in and try again.","network":"Speech needs an internet connection. Check your network.","language-not-supported":"This browser doesn’t support the selected language."}[e.error];
+    if(m){want=false;showMsg(m,true);setUI(false)}else if(e.error!=="no-speech"&&e.error!=="aborted")showMsg("Speech error: "+e.error,true)};
+  rec.onend=()=>{if(want&&restarts<30){restarts++;setTimeout(()=>{try{rec.start()}catch(x){}},250)}else{if(want){showMsg("Dictation paused after a long silence. Press the mic to continue.")}want=false;setUI(false);wpm()}};
+  if(micStream){viz(micStream);if($("#rec").checked)recStart(micStream,"My dictation")}
+  gotResult=false;clearTimeout(wd);wd=setTimeout(()=>{if(want&&!gotResult)showMsg("The mic is on but no text is coming back. Speech recognition is probably blocked in this browser. Open this page in Chrome or Edge.",true)},10000);
+  if(/Electron|VSCode|Code\//i.test(navigator.userAgent))showMsg("This looks like VS Code’s built-in browser, which has no speech service. Open the page in Chrome or Edge instead.",true);
+  try{want=true;sessionWords=0;t0=Date.now();restarts=0;rec.start();setUI(true)}catch(x){want=false;showMsg("Couldn’t start the microphone: "+x.message,true);setUI(false)}
+}
+function stop(){want=false;try{rec&&rec.stop()}catch(x){}setUI(false)}
+function wpm(){const m=(Date.now()-t0)/6e4;if(sessionWords>2&&m>0.05)toast("About "+Math.round(sessionWords/m)+" words per minute")}
+mic.onclick=()=>want?stop():start();
+document.addEventListener("keydown",e=>{if(e.altKey&&e.key.toLowerCase()==="d"){e.preventDefault();mic.click()}});
+
+/* ---------- stats, draft, actions ---------- */
+function stats(){const t=out.value.trim(),w=t?t.split(/\s+/).length:0;$("#stats").textContent=w+" words · "+out.value.length+" characters"}
+function draft(){store.set("dict-draft",out.value)}
+out.addEventListener("input",()=>{last=null;stats();draft()});
+$("#copy").onclick=()=>{if(!out.value)return toast("Nothing to copy yet");(navigator.clipboard?navigator.clipboard.writeText(out.value):Promise.reject()).then(()=>toast("Copied"),()=>{out.select();document.execCommand("copy")?toast("Copied"):toast("Select the text and copy manually")})};
+$("#clear").onclick=()=>{if(!out.value)return;prevText=out.value;out.value="";last=null;stats();draft();toast("Cleared. Press Clear again with empty box to restore.")};
+$("#clear").addEventListener("click",()=>{},{once:false});
+$("#dl").onclick=()=>{if(!out.value)return toast("Nothing to download yet");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out.value],{type:"text/plain;charset=utf-8"}));a.download="dictation-"+new Date().toISOString().slice(0,10)+".txt";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e3)};
+$("#speak").onclick=()=>{if(!("speechSynthesis" in window))return toast("Read aloud isn’t supported here");if(speechSynthesis.speaking){speechSynthesis.cancel();return}if(!out.value)return toast("Nothing to read yet");const u=new SpeechSynthesisUtterance(out.value);u.lang=$("#lang").value;speechSynthesis.speak(u)};
+$("#save").onclick=()=>{const t=out.value.trim();if(!t)return toast("Nothing to save yet");notes.unshift({id:Date.now(),text:t,at:new Date().toLocaleString()});notes=notes.slice(0,25);store.set("dict-notes",notes);renderNotes();toast("Note saved")};
+/* restore after clear: pressing Clear on an empty box brings text back */
+$("#clear").onclick=(f=>()=>{if(!out.value&&prevText){out.value=prevText;prevText=null;stats();draft();toast("Restored");return}f()})($("#clear").onclick);
+
+/* ---------- lists ---------- */
+function renderSnips(){$("#snips").innerHTML=snippets.length?snippets.map((s,i)=>`<li><span title="${esc(s.v)}"><b>${esc(s.k)}</b> → ${esc(s.v)}</span><button data-del-s="${i}" aria-label="Delete snippet ${esc(s.k)}">Delete</button></li>`).join(""):"<li><span>No snippets yet.</span></li>"}
+function renderNotes(){$("#notes").innerHTML=notes.length?notes.map((n,i)=>`<li><span title="${esc(n.at)}">${esc(n.text.slice(0,40))}${n.text.length>40?"…":""}</span><button data-load="${i}">Open</button><button data-del-n="${i}" aria-label="Delete note">✕</button></li>`).join(""):"<li><span>No saved notes yet.</span></li>"}
+$("#sadd").onclick=()=>{const k=$("#sk").value.trim().toLowerCase(),v=$("#sv").value;if(!k||!v)return toast("Fill both boxes");snippets=snippets.filter(s=>s.k!==k);snippets.push({k,v});store.set("dict-snips",snippets);$("#sk").value=$("#sv").value="";renderSnips();toast("Snippet added")};
+document.addEventListener("click",e=>{const a=e.target.closest("[data-del-s],[data-load],[data-del-n]");if(!a)return;
+  if(a.dataset.delS!==undefined){snippets.splice(+a.dataset.delS,1);store.set("dict-snips",snippets);renderSnips()}
+  else if(a.dataset.load!==undefined){out.value=notes[+a.dataset.load].text;stats();draft();out.focus();toast("Note opened")}
+  else{notes.splice(+a.dataset.delN,1);store.set("dict-notes",notes);renderNotes()}});
+
+/* ---------- boot ---------- */
+$("#lang").innerHTML=LANGS.map(([c,n])=>`<option value="${c}">${n}</option>`).join("");
+$("#lang").value=store.get("dict-lang","en-IN");
+$("#lang").onchange=()=>{store.set("dict-lang",$("#lang").value);if(want){stop();setTimeout(start,300)}};
+const live=FAMILY.filter(f=>f.url);
+$("#fam").innerHTML=live.length?live.map(f=>`<a href="${f.url}" rel="noopener">${esc(f.name)}</a>`).join(""):FAMILY.map(f=>`<span>${esc(f.name)} (add link in FAMILY)</span>`).join("");
+$("#hlinks").innerHTML=live.map(f=>`<a href="${f.url}" rel="noopener">${esc(f.name)}</a>`).join(" ");
+$("#theme").onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=d?"light":"dark";store.set("dict-theme",r.dataset.theme)};
+const th=store.get("dict-theme",null);if(th)document.documentElement.dataset.theme=th;
+out.value=store.get("dict-draft","");$("#yr").textContent=new Date().getFullYear();
+if(!SR)showMsg("Your browser doesn’t support speech recognition. You can still type here, but for dictation open this page in Chrome, Edge or Safari.",true);
+/* live waveform from the open mic stream */
+let actx=null;
+function viz(s){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume();const an=actx.createAnalyser();an.fftSize=64;actx.createMediaStreamSource(s).connect(an);const d=new Uint8Array(an.frequencyBinCount),c=$("#wave"),g=c.getContext("2d");
+ (function f(){g.clearRect(0,0,c.width,c.height);if(!micStream)return;an.getByteFrequencyData(d);g.fillStyle=getComputedStyle(c).color;for(let i=0;i<30;i++){const h=Math.max(3,d[i]/255*c.height);g.fillRect(i*10,(c.height-h)/2,6,h)}requestAnimationFrame(f)})()}catch(e){}}
+/* text tools, share, font size */
+function setAll(v){out.focus();out.select();if(!document.execCommand("insertText",false,v))out.value=v;last=null;stats();draft()}
+const TX={title:t=>t.toLowerCase().replace(/(^|\s)(\S)/g,(_,a,b)=>a+b.toUpperCase()),upper:t=>t.toUpperCase(),bullets:t=>t.split(/(?:[.?!।]+\s+|\n+)/).map(s=>s.trim()).filter(Boolean).map(s=>"• "+s).join("\n"),spaces:t=>t.replace(/[ \t]+/g," ").replace(/ +([.,?!।:;])/g,"$1").replace(/\n{3,}/g,"\n\n").trim()};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-tx]");if(!b)return;if(!out.value.trim())return toast("Nothing to change yet");setAll(TX[b.dataset.tx](out.value));toast("Done. Press Ctrl+Z to undo")});
+$("#wa").onclick=()=>out.value.trim()?window.open("https://wa.me/?text="+encodeURIComponent(out.value),"_blank","noopener"):toast("Nothing to send yet");
+$("#mail").onclick=()=>out.value.trim()?location.href="mailto:?subject="+encodeURIComponent("My dictated note")+"&body="+encodeURIComponent(out.value):toast("Nothing to send yet");
+let fs=store.get("dict-fs",18.4);const applyFs=()=>{fs=Math.min(40,Math.max(13,fs));out.style.fontSize=fs+"px";store.set("dict-fs",fs)};
+$("#fm").onclick=()=>{fs-=2;applyFs()};$("#fp").onclick=()=>{fs+=2;applyFs()};applyFs();
+/* ===== voice studio ===== */
+let VOICES=[];
+const FEM=/female|woman|zira|heera|hazel|susan|samantha|victoria|karen|moira|tessa|fiona|swara|neerja|aria|jenny|sonia|libby|kalpana|lekha|veena|priya|raveena|amelie|paulina|helena|monica/i,MAL=/\bmale\b|david|mark|ravi|hemant|prabhat|madhur|guy|ryan|george|daniel|fred|thomas|rishi|jorge|diego|liam|james|eric|brian/i;
+const gender=v=>FEM.test(v.name)?"f":MAL.test(v.name)?"m":"";
+function fillVoices(){if(!("speechSynthesis" in window))return;VOICES=speechSynthesis.getVoices();const pre=$("#lang").value.slice(0,2).toLowerCase(),g=$("#vg").value,keep=store.get("dict-voice","");
+ const idx=VOICES.map((v,i)=>i).filter(i=>VOICES[i].lang.toLowerCase().startsWith(pre)&&(!g||gender(VOICES[i])===g));
+ $("#vsel").innerHTML=idx.length?idx.map(i=>{const v=VOICES[i],gg=gender(v);return `<option value="${i}" ${v.name===keep?"selected":""}>${esc(v.name)}${gg?(gg==="f"?" · female":" · male"):""}</option>`}).join(""):"<option value=\"\">No matching voice on this device</option>"}
+speechSynthesis.onvoiceschanged=fillVoices;$("#lang").addEventListener("change",fillVoices);$("#vg").onchange=fillVoices;$("#vsel").onchange=()=>{const v=VOICES[+$("#vsel").value];if(v)store.set("dict-voice",v.name)};
+function speakText(text,done){speechSynthesis.cancel();const v=VOICES[+$("#vsel").value],parts=text.match(/[^.?!।\n]+[.?!।]*/g)||[text];parts.forEach((p,i)=>{if(!p.trim())return;const u=new SpeechSynthesisUtterance(p);if(v){u.voice=v;u.lang=v.lang}else u.lang=$("#lang").value;u.rate=+$("#vr").value;u.pitch=+$("#vp").value;if(i===parts.length-1&&done)u.onend=u.onerror=done;speechSynthesis.speak(u)})}
+$("#speak").onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}const t=out.value.trim();if(!t)return toast("Nothing to read yet");speakText(t)};
+$("#vtest").onclick=()=>speakText($("#lang").value.startsWith("hi")?"नमस्ते, यह आवाज़ की जाँच है।":"Hello, this is a voice test.");
+/* ===== recordings (IndexedDB) ===== */
+const DB=()=>new Promise((res,rej)=>{const r=indexedDB.open("sevadict",1);r.onupgradeneeded=()=>r.result.createObjectStore("rec",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const tx=async(mode,fn)=>{const db=await DB();return new Promise((res,rej)=>{const t=db.transaction("rec",mode),q=fn(t.objectStore("rec"));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
+async function saveRec(r){try{await tx("readwrite",s=>s.put(r));toast("Recording saved");renderRecs()}catch(e){showMsg("Couldn’t store the recording: "+e.message,true)}}
+async function renderRecs(){let all=[];try{all=(await tx("readonly",s=>s.getAll()))||[]}catch(e){}all.sort((a,b)=>b.id-a.id);
+ $("#recs").innerHTML=all.length?all.map(r=>`<li style="flex-wrap:wrap"><span title="${esc(r.at)}">${esc(r.name)} · ${r.dur}s · ${(r.blob.size/1024).toFixed(0)} KB</span><select data-fmt="${r.id}" aria-label="Download format"><option value="orig">Original</option><option value="mp3">MP3</option><option value="wav">WAV</option></select><button data-play="${r.id}">Play</button><button data-dl="${r.id}">Download</button><button data-delr="${r.id}" aria-label="Delete recording">✕</button></li>`).join(""):"<li><span>No recordings yet. Tick the box above and dictate, or record a read-aloud.</span></li>"}
+function recStart(stream,name){try{const mt=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/mp4"].find(t=>MediaRecorder.isTypeSupported(t)),r=new MediaRecorder(stream,mt?{mimeType:mt}:{}),ch=[],s0=Date.now();r.ondataavailable=e=>e.data.size&&ch.push(e.data);r.onstop=()=>{const blob=new Blob(ch,{type:r.mimeType||"audio/webm"});if(blob.size>1000)saveRec({id:Date.now(),name,at:new Date().toLocaleString(),blob,dur:Math.round((Date.now()-s0)/1000)})};r.start(1000);return r}catch(e){showMsg("Voice recording isn’t supported here: "+e.message,true)}}
+async function decode(blob){const ctx=new(window.AudioContext||window.webkitAudioContext)(),buf=await ctx.decodeAudioData(await blob.arrayBuffer());ctx.close();const n=buf.length,ch=buf.numberOfChannels,m=new Float32Array(n);for(let c=0;c<ch;c++){const d=buf.getChannelData(c);for(let i=0;i<n;i++)m[i]+=d[i]/ch}return{data:m,rate:buf.sampleRate}}
+function i16(f){const o=new Int16Array(f.length);for(let i=0;i<f.length;i++){const s=Math.max(-1,Math.min(1,f[i]));o[i]=s<0?s*32768:s*32767}return o}
+function toWav({data,rate}){const p=i16(data),b=new ArrayBuffer(44+p.length*2),v=new DataView(b),w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));w(0,"RIFF");v.setUint32(4,36+p.length*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,p.length*2,true);new Int16Array(b,44).set(p);return new Blob([b],{type:"audio/wav"})}
+function loadLame(){return window.lamejs?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js";s.onload=res;s.onerror=()=>rej(new Error("Couldn’t load the MP3 encoder. Check your internet connection, or download WAV instead."));document.head.appendChild(s)})}
+async function toMp3({data,rate}){await loadLame();const enc=new lamejs.Mp3Encoder(1,rate,128),p=i16(data),parts=[];for(let i=0;i<p.length;i+=1152){const o=enc.encodeBuffer(p.subarray(i,i+1152));if(o.length)parts.push(o)}const e=enc.flush();if(e.length)parts.push(e);return new Blob(parts,{type:"audio/mpeg"})}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-play],[data-dl],[data-delr]");if(!b)return;const id=+(b.dataset.play||b.dataset.dl||b.dataset.delr);
+ if(b.dataset.delr){await tx("readwrite",s=>s.delete(id));renderRecs();return}
+ const r=await tx("readonly",s=>s.get(id));if(!r)return;if(b.dataset.play){new Audio(URL.createObjectURL(r.blob)).play();return}
+ const f=document.querySelector(`[data-fmt="${id}"]`).value;b.disabled=true;
+ try{let blob=r.blob,ext=r.blob.type.includes("ogg")?"ogg":r.blob.type.includes("mp4")?"m4a":"webm";if(f!=="orig"){const pcm=await decode(r.blob);blob=f==="wav"?toWav(pcm):await toMp3(pcm);ext=f}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=r.name.replace(/\W+/g,"-")+"-"+id+"."+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2e3)}
+ catch(x){showMsg("Conversion failed: "+x.message,true)}finally{b.disabled=false}});
+$("#ra").onclick=async()=>{const t=out.value.trim();if(!t)return toast("Nothing to read yet");let st;
+ try{st=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true,preferCurrentTab:true})}catch(e){return showMsg("Sharing was cancelled or isn’t allowed here.",true)}
+ if(!st.getAudioTracks().length){st.getTracks().forEach(x=>x.stop());return showMsg("No audio was shared. Choose “This tab”, tick “Share tab audio”, then try again.",true)}
+ const mt=["audio/webm;codecs=opus","audio/ogg;codecs=opus"].find(x=>MediaRecorder.isTypeSupported(x)),r=new MediaRecorder(new MediaStream(st.getAudioTracks()),mt?{mimeType:mt}:{}),ch=[],s0=Date.now();showMsg("Recording the read-aloud. Keep this tab open.");
+ r.ondataavailable=e=>e.data.size&&ch.push(e.data);
+ r.onstop=()=>{st.getTracks().forEach(x=>x.stop());const blob=new Blob(ch,{type:r.mimeType});showMsg("");if(blob.size>3000)saveRec({id:Date.now(),name:"Read aloud",at:new Date().toLocaleString(),blob,dur:Math.round((Date.now()-s0)/1000)});else showMsg("The recording came out silent. This browser can’t capture this voice from the tab. Try an online voice (Google or Microsoft) or use the server option.",true)};
+ r.start(1000);speakText(t,()=>setTimeout(()=>r.state!=="inactive"&&r.stop(),600))};
+fillVoices();renderRecs();
+let mrr=null,mst=null,mtimer=null;
+$("#mrec").onclick=async()=>{if(mrr){mrr.stop();return}
+ try{mst=await navigator.mediaDevices.getUserMedia({audio:true})}catch(x){return showMsg("Microphone refused: "+x.name+". Allow it from the lock icon in the address bar.",true)}
+ mrr=recStart(mst,"Voice recording");if(!mrr){mst.getTracks().forEach(t=>t.stop());return}
+ const t0m=Date.now(),lab=$("#mrec");lab.textContent="⏹ Stop recording (0s)";mtimer=setInterval(()=>lab.textContent="⏹ Stop recording ("+Math.round((Date.now()-t0m)/1000)+"s)",1000);
+ mrr.addEventListener("stop",()=>{clearInterval(mtimer);mst.getTracks().forEach(t=>t.stop());mrr=null;lab.textContent="⏺ Record voice";toast("Saved in Recordings below")})};
+/* translate (MyMemory free API, text is sent to that service) */
+$("#tl").innerHTML=LANGS.map(([c,n])=>`<option value="${c.slice(0,2)}">${n}</option>`).join("");$("#tl").value="en";
+$("#tr").onclick=async()=>{const t=out.value.trim();if(!t)return toast("Nothing to translate yet");const from=$("#lang").value.slice(0,2),to=$("#tl").value;if(from===to)return toast("Pick a different target language");
+ const parts=t.match(/[^.?!।\n]+[.?!।]*\s*|\n+/g)||[t],chunks=[];let cur="";for(const p of parts){if((cur+p).length>400&&cur){chunks.push(cur);cur=""}cur+=p}if(cur)chunks.push(cur);
+ $("#tr").disabled=true;showMsg("Translating…");
+ try{const res=[];for(const c of chunks){if(!c.trim()){res.push(c);continue}const r=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(c)+"&langpair="+from+"|"+to);if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();if(String(j.responseStatus)!=="200")throw new Error(j.responseDetails||"service refused");res.push(j.responseData.translatedText+(/\s$/.test(c)?" ":""))}
+  setAll(res.join("").trim());showMsg("");toast("Translated. Ctrl+Z restores the original")}
+ catch(x){showMsg("Translation failed: "+x.message+". Check your internet connection or try shorter text.",true)}finally{$("#tr").disabled=false}};
+/* installable app + offline shell */
+let dip=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e;$("#install").hidden=false});
+$("#install").onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$("#install").hidden=true};
+addEventListener("appinstalled",()=>toast("App installed"));
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+function permInfo(){const sec=window.isSecureContext,fr=self!==top;
+ const set=s=>{$("#perm").textContent="Mic permission: "+s+" · "+(sec?"secure page":"NOT secure, browser will ask every time")+(fr?" · inside a frame":"")};
+ if(!sec){set("unknown");showMsg("This page is not on https or localhost, so the browser asks for the microphone every single time. Open the https:// GitHub Pages link instead of a file or http address.",true);return}
+ if(navigator.permissions&&navigator.permissions.query)navigator.permissions.query({name:"microphone"}).then(p=>{set(p.state);p.onchange=()=>set(p.state)}).catch(()=>set("unknown"));else set("unknown")}
+permInfo();
+renderSnips();renderNotes();stats();
+</script>
+</body>
+</html>
