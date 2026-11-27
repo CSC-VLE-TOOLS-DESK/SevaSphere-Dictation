@@ -1,25 +1,20 @@
 # SevaSphere Dictation
+Speak and it types. Hindi, English and 15+ languages. Static site, no build step.
 
-🌐 **Live site:** https://csc-vle-tools-desk.github.io/SevaSphere-Dictation/
+## Run
+Push these files to the repo root, then Settings > Pages > Deploy from branch (main, /root).
+Local test: `python3 -m http.server 8000` and open http://localhost:8000 in Chrome or Edge.
 
-Free voice-to-text dictation in your browser. Speak in Hindi, English and 15+ languages, and it types for you.
+## Link the family
+In index.html edit the `FAMILY` list (SevaSphere, Kids Corner) and add the Dictation link on those sites.
 
-## Features
-- Voice typing in Hindi, English and 15+ languages
-- Edit, copy, download and email your notes
-- Translate text between languages
-- Install on phone or desktop like an app
-- Notes and editing work offline
+## Notes
+- Speech recognition is done by the browser vendor (Chrome/Edge send audio to their service).
+- Translate uses the free MyMemory API; text you translate is sent to that service.
+- Installable on phone and desktop (PWA). Dictation needs internet; notes and editing work offline.
 
-## How to use
-1. Open the live site in Chrome or Edge.
-2. Allow microphone access when asked.
-3. Choose your language, tap the mic and speak.
-
-## Privacy
-- Speech recognition is done by your browser vendor (Chrome and Edge send audio to their service).
-- Translation uses the free MyMemory service, so text you translate is sent to it.
-- Dictation needs an internet connection.
-
-## About
-Part of the SevaSphere family of tools by CSC-VLE-TOOLS-DESK.
+## Layout (v4)
+- One full-window screen that fits any size or browser zoom (no page scrolling on desktop).
+- Header: language and options. Toolbar below it: all action buttons (wraps to extra rows only when the window is narrow).
+- Left sidebar: Voice commands, Snippets, Notes. Right sidebar: Voice studio and Recordings.
+- On phones (under 820 px wide) the sidebars slide in from the toolbar buttons.
